@@ -13,9 +13,31 @@ class AddPlaceScreen extends ConsumerStatefulWidget {
 class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
   final _titleController = TextEditingController();
 
+  void _showDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Niewłaściwe dane'),
+        content: const Text('Upewnij się, że wprowadzone dane są poprawne!'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+            },
+            child: Text(
+              "Okej",
+              style:
+                  TextStyle(color: Theme.of(context).colorScheme.onSecondary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void onSubmitPlace() {
     if (_titleController.text.trim().isEmpty) {
-      // show Dialog
+      _showDialog();
       return;
     }
     // ubdate riverpod global state
@@ -35,18 +57,29 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        TextField(
-          decoration: const InputDecoration(label: Text('title')),
-          controller: _titleController,
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Dodaj nowe miejsce'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TextField(
+              style:
+                  TextStyle(color: Theme.of(context).colorScheme.onBackground),
+              decoration: const InputDecoration(labelText: 'title'),
+              controller: _titleController,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: onSubmitPlace,
+              icon: const Icon(Icons.add),
+              label: const Text('Dodaj miejsce'),
+            ),
+          ],
         ),
-        ElevatedButton.icon(
-          icon: const Icon(Icons.add),
-          onPressed: onSubmitPlace,
-          label: const Text('Dodaj miejsce'),
-        ),
-      ],
+      ),
     );
   }
 }
