@@ -1,5 +1,6 @@
 import 'package:favorite_places/models/place.dart';
 import 'package:favorite_places/providers/places_provider.dart';
+import 'package:favorite_places/widgets/image_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -40,8 +41,6 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
       _showDialog();
       return;
     }
-    // ubdate riverpod global state
-    // add new PlaceItem to List
     ref
         .read(placesProvider.notifier)
         .addPlace(PlaceItem(title: _titleController.text));
@@ -71,6 +70,8 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
               decoration: const InputDecoration(labelText: 'title'),
               controller: _titleController,
             ),
+            const SizedBox(height: 10),
+            const ImageInput(),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: onSubmitPlace,
