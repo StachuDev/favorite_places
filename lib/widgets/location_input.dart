@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:favorite_places/models/place.dart';
 import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
+import 'package:favorite_places/env/env.dart';
 
 import 'package:flutter/material.dart';
 
@@ -28,7 +29,8 @@ class _LocationInputState extends State<LocationInput> {
     }
     final lat = _pickedLocation!.latitude;
     final lng = _pickedLocation!.longitude;
-    return 'https://maps.googleapis.com/maps/api/staticmap?center=$lat,$lng&zoom=13&size=600x300&maptype=roadmap&markers=color:red%7Clabel:A%7C$lat,$lng&key=AIzaSyDMVLTVw_RwoPczJKK6EyvdKWESelw7Eh4';
+
+    return 'https://maps.googleapis.com/maps/api/staticmap?center=$lat,$lng&zoom=13&size=600x300&maptype=roadmap&markers=color:red%7Clabel:A%7C$lat,$lng&key=${Env.googleMapsApiKey}';
   }
 
   void _getCurrentLocation() async {
@@ -66,7 +68,7 @@ class _LocationInputState extends State<LocationInput> {
     }
 
     final url = Uri.parse(
-        'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$lng&key=AIzaSyDMVLTVw_RwoPczJKK6EyvdKWESelw7Eh4');
+        'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$lng&key=${Env.googleMapsApiKey}');
 
     try {
       final response = await http.get(url);
@@ -74,6 +76,7 @@ class _LocationInputState extends State<LocationInput> {
         throw Exception('Response body is empty');
       }
       final resData = json.decode(response.body);
+      print(resData);
       final address = resData['results'][0]["formatted_address"];
 
       setState(() {
@@ -93,6 +96,7 @@ class _LocationInputState extends State<LocationInput> {
     }
     print(locationData.latitude);
     print(locationData.longitude);
+    print(Env.googleMapsApiKey);
   }
 
   @override
