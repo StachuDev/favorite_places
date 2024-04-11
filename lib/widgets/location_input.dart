@@ -1,9 +1,15 @@
+import 'dart:convert';
+
+import 'package:favorite_places/models/place.dart';
 import 'package:location/location.dart';
+import 'package:http/http.dart' as http;
 
 import 'package:flutter/material.dart';
 
 class LocationInput extends StatefulWidget {
-  const LocationInput({super.key});
+  const LocationInput({super.key, required this.onLocationPicked});
+
+  final void Function(PlaceLocation location) onLocationPicked;
 
   @override
   State<LocationInput> createState() {
@@ -12,8 +18,18 @@ class LocationInput extends StatefulWidget {
 }
 
 class _LocationInputState extends State<LocationInput> {
-  Location? pickedLocation;
+  PlaceLocation? _pickedLocation;
   bool _isGettingLocation = false;
+  String? _error;
+
+  String get locationImage {
+    if (_pickedLocation == null) {
+      return '';
+    }
+    final lat = _pickedLocation!.latitude;
+    final lng = _pickedLocation!.longitude;
+    return 'https://maps.googleapis.com/maps/api/staticmap?center=$lat,$lng&zoom=13&size=600x300&maptype=roadmap&markers=color:red%7Clabel:A%7C$lat,$lng&key=AIzaSyDMVLTVw_RwoPczJKK6EyvdKWESelw7Eh4';
+  }
 
   void _getCurrentLocation() async {
     Location location = Location();
@@ -42,10 +58,39 @@ class _LocationInputState extends State<LocationInput> {
       _isGettingLocation = true;
     });
     locationData = await location.getLocation();
-    setState(() {
-      _isGettingLocation = false;
-    });
+    final lat = locationData.latitude;
+    final lng = locationData.longitude;
 
+    if (lat == null || lng == null) {
+      return;
+    }
+
+    final url = Uri.parse(
+        'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$lng&key=AIzaSyDMVLTVw_RwoPczJKK6EyvdKWESelw7Eh4');
+
+    try {
+      final response = await http.get(url);
+      if (response.body == 'null') {
+        throw Exception('Response body is empty');
+      }
+      final resData = json.decode(response.body);
+      final address = resData['results'][0]["formatted_address"];
+
+      setState(() {
+        _pickedLocation = PlaceLocation(
+          latitude: lat,
+          longitude: lng,
+          address: address,
+        );
+        _isGettingLocation = false;
+      });
+
+      widget.onLocationPicked(_pickedLocation!);
+    } catch (err) {
+      setState(() {
+        _error = 'Coś poszło nie tak, spróbuj ponownie później!';
+      });
+    }
     print(locationData.latitude);
     print(locationData.longitude);
   }
@@ -61,8 +106,28 @@ class _LocationInputState extends State<LocationInput> {
           .copyWith(color: Theme.of(context).colorScheme.onBackground),
     );
 
+    if (_pickedLocation != null) {
+      previewContent = Image.network(
+        locationImage,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+      );
+    }
+
     if (_isGettingLocation == true) {
       previewContent = const CircularProgressIndicator();
+    }
+
+    if (_error != null) {
+      previewContent = Center(
+        child: Text(
+          _error!,
+          style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                color: Theme.of(context).colorScheme.onBackground,
+              ),
+        ),
+      );
     }
     return Column(
       children: [
